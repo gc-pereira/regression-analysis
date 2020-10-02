@@ -25,12 +25,12 @@ summary.aov(mod)
 confint.lm(mod, level = 0.95)
 
 #exercicio 4
-set.seed(2020)
+set.seed(45)
 intercept <- 1
 inclination <- 1
 interceptArray <- c()
 inclinationArray <- c()
-for (i in 1:501) {
+for (i in 1:500) {
   xi <-	c(10.4,	14.4,	10.4,	13.2,	14,	12.4,	9.2,	6.8,	9.2,	12,	10,	8,	7.6,	11.2)
   randomErrors <- rnorm(14, mean = 0, sd = 2)
   yij <- intercept + inclination*xi + randomErrors
@@ -41,29 +41,24 @@ for (i in 1:501) {
 
 data <- data.frame(interceptArray,inclinationArray)
 
-# numero de classes de Sturges
-k = 1 + 3.3*log(length(data[,1]),10)
+#histogramas usando a biblioteca ggplot2
 ggplot(data = data, aes(x=inclinationArray)) + 
   labs(title = "Histograma de beta1", x="Valores gerados", y="Frequência")+
-  geom_histogram(bins = k)
+  geom_histogram()
 
 ggplot(data = data, aes(x=interceptArray)) + 
   labs(title = "Histograma de beta0", x="Valores gerados", y="Frequência")+
-  geom_histogram(bins = k)
+  geom_histogram()
 
-# testes de normalidade 
-lillie.test(interceptArray)
-shapiro.test(interceptArray)
-xb <- mean(interceptArray)
-sx <- sd(interceptArray)
-ks.test(interceptArray, "pnorm", xb, sx,alternative='two.sided')
-ad.test(interceptArray)
-qqPlot(interceptArray, dist='norm', envelope=0.95, pch = 19, xlab = "Quantis da normal", ylab = "Resíduos")
+#gráfico normal probabilístico
+qqPlot(interceptArray, dist='norm', envelope=0.95, pch = 19, xlab = "Quantis da normal", ylab = expression(beta))
+qqPlot(inclinationArray, dist='norm', envelope=0.95, pch = 19, xlab = "Quantis da normal", ylab = expression(beta))
 
+#medidas descritivas para b1 e b0
+mean(interceptArray)
+var(interceptArray)
+mean(inclinationArray)
+var(inclinationArray)
 
-#função poder do teste
-theta <- seq(13, 22, l=100)
-q <- (17 + (5/sqrt(25)) - theta)/(5/sqrt(25))
-poder <- 1 - pf(q,1,2)
-plot(theta, poder, ty="l", xlab = expression(theta), 
-     ylab = expression(gamma(theta)))
+sum((xi - mean(xi))^2)
+var(xi)
