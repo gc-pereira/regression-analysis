@@ -1,4 +1,6 @@
 require(ggplot2)
+require(car)
+require(nortest)
 
 ggplot(dataset, aes(x = NG, y = medida_tumor)) +
   
@@ -25,14 +27,58 @@ confint.lm(mod, level = 0.95)
 out = summary(mod)
 out
 out$coefficients
+mod$coefficients
+hist(out$residuals)
 
-'''
-Para b0 o valor-p foi de 3.452084e-14
-Para b1 o valor-p foi de 1.864266e-01
-'''
+#Para b0 o valor-p foi de 3.452084e-14
+#Para b1 o valor-p foi de 1.864266e-01
 
 qt(0.975, 64)
 
 sum((dataset$NG - mean(dataset$NG))^2)
 var(dataset$NG)
 mean(dataset$NG)
+
+#Analise de diagnóstico do modelo
+
+residuos = mod$residuals
+
+ggplot() +
+  geom_histogram(aes(x = residuos))
+
+hist(
+     mod$residuals, 
+     xlab = "Resíduos", 
+     ylab = "Frequência", 
+     main = " ",
+     ylim = c(0,25),
+     xaxt = 'n'
+     )
+
+axis(
+  side=1, 
+  at=seq(-60,160, 20), 
+  labels=seq(-60,160,20)
+  )
+
+boxplot(
+    residuos, 
+    horizontal=T, 
+    xaxt = 'n'
+    )
+axis(
+  side=1, 
+  at=seq(-60,160, 20), 
+  labels=seq(-60,160,20)
+)
+
+valoresPreditos = mod$fitted.values
+
+plot(residuos ~ valoresPreditos, pch = 19)
+
+plot(mod, pch = 19)
+shapiro.test(residuos)
+
+plot(ecdf(residuos))
+plot(ecdf(rnorm(66,-2,sqrt(0.5))))
+
