@@ -1,0 +1,238 @@
+---
+title: "Terceira lista de exercícios"
+author: "Gabriel Pereira e Matheus Pacheco"
+date: "04/11/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Primeira questão
+
+### Item A
+Neste contexto o objetivo é estudar a relação entre o lucro anual de uma ação em função de sua cotação média anual, então
+\begin{itemize}
+  \item Y: Lucro anual
+  \item X: Cotação média anual
+\end{itemize}
+
+Em que todas as unidades experimentais são as ações, tendo então um modelo linear simples.
+
+### Item B
+Podemos ver que na tabela faltam alguns valores, e também temos algumas relações que nos ajudam a completar essa tabela ANOVA. Como já sabemos $QMRegressão = SQRegressão$ pois essa fonte de variação tem somente 1 grau de liberdade. Passando para a fonte de variação dos $\textit{Erros}$, nos termos do problema temos um conjunto de 12 ações, o que seria o nosso tamanho amostral $\textit{n}$, ou seja, o seus graus de liberdade são $n-2 = 10$, então já podemos sabemos os graus de liberdade do $\textit{Total}$, que é a soma dos graus de liberdade já citados aqui, então, 11. Pela ortogonalidade, temos no modelo ANOVA $\textit{one-way}$ a seguinte relação,
+
+\begin{align*}
+  SQTotal &= SQRegressão + SQErro\\
+  1766 &= 1209 + SQErro\\
+  &\implies SQErro = 557 
+\end{align*}
+
+E de maneira análoga ao feito anterior, temos que $QMErro = \frac{SQErro}{10} = \frac{557}{10} = 55,7$, só restando a estatística $F = \frac{QMRegressão}{QMErro} = \frac{1209}{55,7} = 21,70557$. Desta maneira temos a tabela ANOVA completa,
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c|c|c}
+    \hline
+        Fonte de variação & Graus de liberdade & SQ & QM & F \\
+        \hline
+        Regressão & 1 & 1209 & 1209 & 21,70557\\
+        Erro & 10 & 557 & 55,7 &\\
+        Total & 11 & 1766 & &\\
+    \end{tabular}
+    \label{tab:my_label}
+\end{table}
+
+### Item C
+A partir da estatística F conseguimos ter o valor-p do teste
+```{r}
+pf(21.70557,1,10, lower.tail = FALSE)
+```
+Como o valor-p encontrado acima é menor que os níveis de significância mais usuais, rejeitamos a hipótese nula $H_0$. Ao nível de significância $\alpha$, temos evidência que não existe relação linear significativa entre as variáveis explicativa (Lucro anual) e dependente (Cotação média anual) dessas ações.
+
+### Item D
+Neste problema o coeficiente de determinação $R^2$
+```{r}
+rSquare <- 557/1766
+```
+Ou seja, isso implica que $31,5402\%$ da variância do lucro anual e cotação médial anual é explicada pelo modelo linear.
+
+### Item E
+Supondo que as suposições estão todas sendo atendidas,temos evidências que os resíduos são amostra aleatória de uma dstribuição normal. Os erros aleatório $\epsilon_i \sim^{iid} N(0,\sigma^2)$ de variância constante.
+
+## Segunda questão
+
+### Item A
+Para construirmos a matriz de estimadores, temos que fazer a operação, $(X'X)^{-1}X'Y$ e teremos o vetor $\hat{\beta}_{(4x1)}$ pois como $(X'X)_{(4x4)}$ a matriz $X$ é $(nx4)$, dado que a primeira coluna é uma matriz de 1's. Abaixo temos o algorítmo para encontrar tal matriz,
+```{r}
+xTranspostoX <- matrix(c(24,    15293,    14251,   14081,
+                        15293, 10325709, 9479964, 9233198,
+                        14251, 9479964,  8831899, 8617031,
+                        14081, 9233198,  8617031, 8572649), ncol = 4)
+xTranspostoY <- matrix(c(14243,9328336,8724575,8662554), ncol = 1)
+
+bAjustado <- solve(xTranspostoX)%*%xTranspostoY
+bAjustado
+```
+Portanto, tendo o vetor de estimativas em mãos, a reta ajustada é $\hat{y} = 7.9988503 -0.1472353x_1 + 0.2683686x_2 + 0.8861712x_3$.
+
+### Item B
+No cálculo dos valores presentes na tabela ANOVA, primeiramente encontremos SQErro,
+\begin{align*}
+  SQErros &= Y'Y - \hat{\beta}'X'Y
+\end{align*}
+Logo, segue que
+```{r}
+yTranspostoY <- 8836217
+sQE <- yTranspostoY - t(bAjustado)%*%xTranspostoY
+sQE
+```
+Antes de continuar, vale ressaltar que a matriz X'X tem essa forma,
+
+$\begin{bmatrix}
+1      & 1      & ... & 1     \\
+X_{11} & X_{12} & ... & X_{1n}\\
+X_{21} & X_{21} & ... & X_{2n}\\
+X_{31} & X_{32} & ... & X_{3n} 
+\end{bmatrix}$
+$\begin{bmatrix}
+1 & X_{11} & X_{21} & X_{31}\\
+1 & X_{12} & X_{22} &X_{32}\\
+. & . & . &.\\
+. & . & . &.\\
+. & . & . &.\\
+1 & X_{1n} & X_{2n} &X_{3n} 
+\end{bmatrix}$ 
+=
+$\begin{bmatrix}
+n & \sum_{i = 1}^{n} X_{1i} & \sum_{i = 1}^{n} X_{2i} & \sum_{i = 1}^{n} X_{3i}\\
+\sum_{i = 1}^{n} X_{1i} & \sum_{i = 1}^{n} X_{1i}^2 & \sum_{i = 1}^{n} X_{1i}X_{2i} & \sum_{i = 1}^{n} X_{1i}X_{3i}\\
+\sum_{i = 1}^{n} X_{2i} & \sum_{i = 1}^{n} X_{1i}X_{2i} & \sum_{i = 1}^{n} X_{2i}^2 & \sum_{i = 1}^{n} X_{2i}X_{3i}\\
+\sum_{i = 1}^{n} X_{3i} & \sum_{i = 1}^{n} X_{1i}X_{3i} & \sum_{i = 1}^{n} X_{2i}X_{3i} & \sum_{i = 1}^{n} X_{3i}^2
+\end{bmatrix}$
+
+então o elemento da linha 1 e coluna 1 corresponde ao tamanho da amostra, ou seja, $n = 24$. Analogamente, se fizermos,
+\begin{center}
+  X'
+  $\begin{bmatrix}
+    Y_1\\
+    Y_2\\
+    .\\
+    .\\
+    .\\
+    Y_n
+  \end{bmatrix}$
+  =
+  $\begin{bmatrix}
+    \sum_{i = 1}^{n}Y_i\\
+    \sum_{i = 1}^{n}X_{1i}Y_i\\
+    \sum_{i = 1}^{n}X_{2i}Y_i\\
+    \sum_{i = 1}^{n}X_{3i}Y_i
+  \end{bmatrix}$
+\end{center}
+teremos a média da produção de milho, $\bar{Y} = \frac{14243}{24} = 593,4583$, o que nos permite calcular $SQT$, segue então para a expressão matricial, 
+\begin{align*}
+  SQT &= Y'Y -n\bar{Y}^2\\
+      &= 8836217 - 24(593,4583)^2\\
+      &\approx 383590
+\end{align*}
+```{r}
+n = xTranspostoX[1,1]
+yBar <- xTranspostoY[1]/n
+sQT <- yTranspostoY - n*yBar^2
+sQT
+```
+E devido a linearidade, temos $SQT = SQErros + SQRegressão$, então,
+```{r}
+sQR <- sQT - sQE
+sQR
+```
+Então a tabela ANOVA,
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c|c|c|c}
+    \hline
+        Fonte de variação & Graus de liberdade & SQ & QM & F \\
+        \hline
+        Regressão & 3 & 305747,8 & 101915.9 & 26.18525\\
+        Erro & 20 & 77842,21 & 3892.111 &\\
+        Total & 23 & 383590 & 16677,83 &\\
+    \end{tabular}
+\end{table}
+
+### Item C
+Para fazer os intervalos de confiança é necessário um estimador da variância dos parâmetros desse ajuste, este é,
+\begin{align*}
+  s^2(\hat{\beta}) = QME(X'X)^{-1}
+\end{align*}
+então a matriz de variância e covariância dos estimadores é dada por,
+```{r}
+qME <- (sQE/2)
+sQuadrado <- matrix(rep(0,16), ncol = 4)
+xTranspostoXInversa <- solve(xTranspostoX)
+for (i in 1:4) {
+  for (j in 1:4) {
+    sQuadrado[i,j] = qME * xTranspostoXInversa[i,j]
+  }
+}
+sQuadrado
+```
+Conhecendo a matriz estimada acima, temos que os intervalos de confianças dados por,
+\begin{align*}
+  \hat{\beta_k} \pm t_{\frac{1-\alpha}{2}}s(\hat{\beta_k})
+\end{align*}
+
+```{r}
+intervalosParaBeta <- function(arr, alfa, n){
+  if(ncol(arr) == 1){
+    intervalos <- data.frame(
+                              "beta" = c(0:(length(arr)-1)),
+                              "limite_inferior" = rep(0, length(arr)),
+                              "limite_superior" = rep(0, length(arr))
+                              )
+    for(j in 1:length(arr)){
+      inf <- arr[j] - qt((1-alfa)/2, n-2)*sQuadrado[j,j]
+      sup <- arr[j] + qt((1-alfa)/2, n-length(arr))*sQuadrado[j,j]
+      if(sup > inf){
+        intervalos$limite_inferior[j] <- inf
+        intervalos$limite_superior[j] <- sup
+      }
+      else {
+        intervalos$limite_inferior[j] <- sup
+        intervalos$limite_superior[j] <- inf
+      }
+    }
+  } else {
+    print("O vetor de betas deve ser do tipo coluna")
+  }
+  return(intervalos)
+}
+
+intervalosParaBeta(bAjustado, 0.1, n)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
