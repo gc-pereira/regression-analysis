@@ -169,7 +169,7 @@ Para fazer os intervalos de confiança é necessário um estimador da variância
 \end{align*}
 então a matriz de variância e covariância dos estimadores é dada por,
 ```{r}
-qME <- (sQE/2)
+qME <- (sQE/3)
 sQuadrado <- matrix(rep(0,16), ncol = 4)
 xTranspostoXInversa <- solve(xTranspostoX)
 for (i in 1:4) {
@@ -193,7 +193,7 @@ intervalosParaBeta <- function(arr, alfa, n){
                               "limite_superior" = rep(0, length(arr))
                               )
     for(j in 1:length(arr)){
-      inf <- arr[j] - qt((1-alfa)/2, n-2)*sQuadrado[j,j]
+      inf <- arr[j] - qt((1-alfa)/2, n-length(arr))*sQuadrado[j,j]
       sup <- arr[j] + qt((1-alfa)/2, n-length(arr))*sQuadrado[j,j]
       if(sup > inf){
         intervalos$limite_inferior[j] <- inf
@@ -213,24 +213,141 @@ intervalosParaBeta <- function(arr, alfa, n){
 intervalosParaBeta(bAjustado, 0.1, n)
 ```
 
+### Item D
+Podemos concluir, a partir dos itens anteriores, que no modelo ajustado, $X_1$ é uma variável inversamente proporcional às outras, inclusive à variável resposta, ou seja, quando aumentamos o valor de $X_1$, temos um decréscimo no valor da variável resposta, diferentemente de $X_2$ e $X_3$, onde vemos uma relação direta com a variável resposta. Conseguimos também, ter evidências para rejeitar $H_0$, ao nível de significância de 1\%, uma vez que temos um valor alto para a estatística de teste. Posteriormente, a partir da construção de intervalos de confiança de 90\% para os parâmetros, pode-se notar que para o intercepto o intervalo encontrado é muito grande, então para acertarmos o valor do intercepto desse modelo é necessário que os intervalores sejam muito grandes, o que nos da evidência de que o parâmetro possui uma variância muito alta. Os demais intervalos tem magnitude menor e bem próxima do valor estimado.
 
 
+## Questão 3
 
+### Item 3.1
+```{r}
+library(readxl)
+library(GGally)
+D33 <- read_excel("C:/Users/55119/Desktop/regression analysis/D33.xlsx")
+View(D33)
 
+ggpairs(D33)
+```
+Neste gráfico, é perceptível nessa amostra, que Y possui uma relação linear inversa com a idade do cliente, gravidade da doença e nível de ansiedade (então a medida que a idade do paciente cresce o nível de satisfação tende a decrescer, o mesmo vale para as demais variáveis). Pode-se perceber também que a distribuição marginal das variáveis são assimétricas e algumas tendem a ser irregulares, esboçando um comportamento polinomial (no caso do nível de ansiedade). O valor absoluto do coeficiente de correlação entre as variáveis nível de ansiedade e gravidade da doença é alta, próxima de $0.8$, as demais tem correlações são medianas.
 
+### Item 3.2
+```{r}
+x <- matrix(c(rep(1, length(D33$X1)), D33$X1, D33$X2, D33$X3), ncol = 4)
 
+y <- matrix(D33$Y, ncol = 1)
 
+betaAjustado <- solve(t(x)%*%x)%*%t(x)%*%y
+betaAjustado
+```
+Então o modelo ajustado é
+\begin{align*}
+  \hat{Y} = 162,8758987 -1,2103182X_1 -0,6659056X_2 -8,6130315X_3
+\end{align*}
 
+O valor obtido para a variável \textit{Gravidade da doença} (para $X_2$), nos mostra que, dentro de um índice definido previamente, a cada uma unidade que se aumenta nessa variável, muda-se em -0,6659056 o nível de satisfação do cliente fixada as outras variáveis, ou seja, quanto mais grave a doença e mais difícil de saná-la, mais o cliente tende a ficar insatisfeito com o atendimento. Interpretando o modelo de maneira geral, temos que o intercepto, ou seja, a satisfação do cliente é próxima de 162,8758987 quando a gravidade da doença e nível de ansiedade são zero e a idade tende a ser zero. E quando temos um acrescimo de 1 unidade simultaneamente nas variáveis, o nível de satisfação estimado sofre um decrescimo de 10,4893.
 
+### Item 3.3
+Como SSR($X_1$/$X_2$) = S($X_1$, $X_2$) - S($X_2$), temos a tabela anova com a soma de quadrados extra,
+```{r}
+modelo = lm(Y ~ X1 + X2 + X3, data = D33)
+anova(modelo)
+```
 
+Visto que a soma de quadrados da regressão é dado por,
 
+\begin{align*}
+  SQR = \hat{\beta}'X'Y - n\bar{Y}^2
+\end{align*}
 
+então SSR($X_1$, $X_2$)
+```{r}
+modelo1 <- lm(Y ~ X2 + X1 + X3, data = D33)
+anova(modelo1)
+```
 
+Então, pelos valores encontrados acima, temos que SSR($X_1$/$X_2$) = 1960,56 e SSR($X_3$/$X_1$, $X_2$) = 52.4. Logo observamos que a SSR($X_1$, $X_2$) = 4081,2 é maior que a SSR($X_2$) = 2120,659, ou seja, quando acrescentado $X_1$ no modelo temos um acréscimo na soma de quadrados de regressão, este valor representa o quanto “melhora" o modelo ajustado com a inclusão de $X_1$, considerando que $X_2$ já esta no modelo. Agora, observemos que a SSR($X_1$, $X_2$, $X_3$) = 4133,6 é maior que a SSR($X_1$, $X_2$) = 4081,2, ou seja, quando acrescentado $X_3$ no modelo temos um acréscimo, menor que o anterior, na soma de quadrados de regressão, este valor representa o quanto “melhora” o modelo ajustado com a inclusão de $X_3$, considerando que $X_1$ e $X_2$ já estão no modelo.
 
+### Item 3.4
 
+#### Hipóteses
+\begin{align*}
+  H_0: \beta_3 = 0\\
+  H_1: \beta_3 \neq 0
+\end{align*}
 
+#### Nível de significância
 
+$\alpha$ = $5\%$
 
+#### Estatística de teste e sua distribuição sob $H_0$
+\begin{align*}
+  F^* = \frac{\frac{SSR(X_3/X_1, X_2)}{1}}{\frac{SSE(X_1, X_2, X_3)}{19}}
+\end{align*}
+
+#### Valor observado da estatística de teste
+```{r}
+f_estrela <- (52.4/1)/(2011.6/(19))
+f_estrela
+```
+
+#### Valor-p
+```{r}
+pf(f_estrela, 1, 19, lower.tail = FALSE)
+```
+
+#### Conclusão do teste
+Como o \textit{valor-p} é maior do que os níveis de significância mais usuais, não rejeitamos $H_0$. Ao nível de significância de $5\%$, temos evidências de que o efeito do nível de ansiedade não influencia o modelo dado que as variáveis idade e gravidade da doença já estão no modelo.
+
+\newpage
+### Item 3.5
+
+#### Hipóteses
+\begin{align*}
+  H_0: \beta_1 = \beta_2 = 0\\
+  H_1: \beta_i \neq 0, i \in {1,2}
+\end{align*}
+
+#### Nível de significância
+
+$\alpha$ = $5\%$
+
+#### Estatística de teste e sua distribuição sob $H_0$
+\begin{align*}
+  F^* = \frac{\frac{SSR(X_1, X_2|X_3)}{2}}{\frac{SSE(X_1, X_2, X_3)}{19}}
+\end{align*}
+
+#### Valor observado da estatística de teste
+O numerador da estatística de teste pode ser decomposto em, 
+\begin{align*}
+  SSR(X_1, X_2|X_3) = SSR(X_1|X_3) + SSR(X_2|X_1, X_3)
+\end{align*}
+então precisamos ter o valor da tabela anova que corresponde a eles, reorganizando as variáveis no modelo linear dado pelo comando abaixo, teremos a ANOVA com a soma dos quadrados extras contendo exatamente os valores que são necessários para o cálculo da estatística de teste,
+```{r}
+modelo3 <- lm(Y ~ X3 + X1 + X2, data = D33)
+anova(modelo3)
+```
+segue que, 
+\begin{align*}
+  SSR(X_1, X_2|X_3) &= SSR(X_1|X_3) + SSR(X_2|X_1, X_3)\\
+  &= 1834,63 + 69,65\\
+  &= 1904,28
+\end{align*}
+portanto, 
+```{r}
+f_estrela <- (1904.28/2)/(2011.6/19)
+f_estrela
+```
+
+#### Valor-p
+
+Temos que $P(F_{2,19} > F^*)$ é igual a, 
+```{r}
+pf(f_estrela, 2, 19, lower.tail = FALSE)
+```
+
+#### Conclusão do teste
+
+Como o \textit{valor-p} é menor do que os níveis de significância mais usuais, rejeitamos $H_0$. Ao nível de significância de $5\%$, temos evidências de que o efeito do nível de ansiedade e a gravidade da doença não influenciam o modelo dado que a variável idade já está no modelo.
 
 
 
