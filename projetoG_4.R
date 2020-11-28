@@ -1,9 +1,7 @@
 library(readxl)
-DG <- read_excel("dados/DG_projeto_reg.xlsx")
-View(DG)
+DG <- read_excel("/home/gabriel/Desktop/regression-analysis/bike.xlsx")
 # V8 V4 V5 
 dados = data.frame(X1 = as.numeric(DG$V8), X2 = as.numeric(DG$V4), X3 = as.numeric(DG$V5), Y = as.numeric(DG$V9))
-View(dados)
 
 modelo <- lm(Y ~ X1+X2+X3, data = dados) # modelo com x1,x2,x3
 summary(modelo)
@@ -44,21 +42,21 @@ anova(modelo132)
 # regiao critica 
 qf(0.95,1,727)
 
-## correlação das variaveis 
-DG_completo <- read_excel("dados/DG.xlsx")
-DG_completo$X1 = as.numeric(DG_completo$X1)
-DG_completo$X2 = as.numeric(DG_completo$X2)
-DG_completo$X3 = as.numeric(DG_completo$X3)
-DG_completo$X4 = as.numeric(DG_completo$X4)
-DG_completo$X5 = as.numeric(DG_completo$X5)
-DG_completo$X6 = as.numeric(DG_completo$X6)
-DG_completo$X7 = as.numeric(DG_completo$X7)
-DG_completo$X8 = as.numeric(DG_completo$X8)
-DG_completo$Y = as.numeric(DG_completo$Y)
+## correlacao das variaveis 
+DG_new <- NULL
+DG_new$X1 = as.numeric(DG$V1)
+DG_new$X2 = as.numeric(DG$V2)
+DG_new$X3 = as.numeric(DG$V3)
+DG_new$X4 = as.numeric(DG$V4)
+DG_new$X5 = as.numeric(DG$V5)
+DG_new$X6 = as.numeric(DG$V6)
+DG_new$X7 = as.numeric(DG$V7)
+DG_new$X8 = as.numeric(DG$V8)
+DG_new$Y = as.numeric(DG$V9)
 
 library(GGally)
-ggpairs(DG_completo[,-c(1,2,3)])
-pairs(DG_completo[,-c(1,2,3)], pch = 19)
+ggpairs(DG_new[-c(1,2,3)])
+pairs(DG_new[-c(1,2,3)], pch = 19)
 
 ### valores para a diagonal para a matriz H
 uns <- matrix(c(rep(1,731)),731)
@@ -168,8 +166,8 @@ ggplot(data,aes(y=res_stud, x=pred))+
   geom_hline(yintercept=0, colour="red", size=1)+
   gghighlight(res_stud>2.5, label_key = res_stud)+
   theme_minimal()+
-  labs(x= "Valores preditos", y = "Resíduos studentizados", 
-       title = "Gráfico preditos x resíduos studentizados") +
+  labs(x= "Valores preditos", y = "Residuos studentizados", 
+       title = "Grafico preditos x residuos studentizados") +
   theme(plot.title = element_text(hjust = 0.5), axis.title = 
           element_text(size = 13), 
         axis.text = element_text(size = 13), title =  
@@ -180,13 +178,13 @@ summary(cbind(res_ord,res_padr,res_stud))
 
 data[data$res_stud>2.5,]
 
-# Diagonal da Matriz chapéu
+# Diagonal da Matriz chap?u
 H_diag <- hatvalues(modelo)
 ggplot(data, aes(y=H_diag))+
   geom_boxplot(alpha = 0.8, fill = 'darkblue', width = 1)+
   geom_hline(yintercept=2*p/n, colour="red", size=1,
              linetype = "dashed")+
-  geom_text(aes(-0.8, 2*p/n, label = "Critério de BKW", vjust = -1),
+  geom_text(aes(-0.8, 2*p/n, label = "Crit?rio de BKW", vjust = -1),
             colour="red")+
   labs(title = "Boxplot dos valores da diagonal de H", 
        y = "Valores de hii") +
@@ -201,7 +199,7 @@ ggplot(data, aes(y=H_diag))+
 
 summary(H_diag)
 
-# Observações discrepantes
+# Observa??es discrepantes
 H_diag[H_diag>2*p/n] # BKW
 H_diag[H_diag>0.1] # outliers boxplot
 
@@ -224,7 +222,7 @@ ggplot(meltData, aes(factor(variable), value))+
   geom_hline(yintercept=c(-2/sqrt(n),2/sqrt(n)), colour="red",
              size=0.9, linetype = "dashed")+
   labs(title = "Boxplot dos valores de DF Beta", 
-       y = "Valores de Df Beta", x = "Parâmetros") +
+       y = "Valores de Df Beta", x = "Par?metros") +
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5), axis.title = 
           element_text(size = 13), 
@@ -242,7 +240,7 @@ ggplot(data, aes(y=DFfit))+
   geom_boxplot(alpha = 0.8, fill = 'darkblue', width = 1)+
   geom_hline(yintercept=c(-2*sqrt(p/(n-p)),2*sqrt(p/(n-p))),
              colour="red", size=1, linetype = "dashed")+
-  geom_text(aes(-0.8, 2*sqrt(p/(n-p)), label = "Critério de BKW", 
+  geom_text(aes(-0.8, 2*sqrt(p/(n-p)), label = "Crit?rio de BKW", 
                 vjust = -1), colour="red")+
   labs(title = "Boxplot dos valores de DF Fits", 
        y = "Valores de DF Fits") +
@@ -257,7 +255,7 @@ ggplot(data, aes(y=DFfit))+
 
 summary(DFfit)
 
-# Observações discrepantes
+# Observa??es discrepantes
 DFfit[abs(DFfit)>2*sqrt(p/(n-p))]
 
 
@@ -319,18 +317,18 @@ library(ggplot2)
 ggplot(dados_res)+
   theme_minimal()+
   geom_histogram(aes(x= res), col= "black", fill = "darkred", bins = 12)+
-  labs(title = 'Histograma dos Resíduos',
-       y = 'Frequência',
-       x = 'Resíduos')+
+  labs(title = 'Histograma dos Res?duos',
+       y = 'Frequ?ncia',
+       x = 'Res?duos')+
   theme(plot.title=element_text(hjust = 0.5))
 
 # boxplot dos residuos
 ggplot(dados_res)+
   theme_minimal()+
   geom_boxplot(aes(x= res), col= "black", fill = "darkred")+
-  labs(title = 'Boxplot Resíduos',
-       y = 'Frequência',
-       x = 'Resíduos')+
+  labs(title = 'Boxplot Res?duos',
+       y = 'Frequ?ncia',
+       x = 'Res?duos')+
   theme(plot.title=element_text(hjust = 0.5))
 
 ### teste de independencia 
@@ -338,33 +336,39 @@ library(asbio)
 dwtest(modelo)
 
 ind <- ggplot() +
-  geom_point(aes(y = res, x = 1:731), size = 2, col = "black") + 
+  geom_point(aes(y = res, x = 1:731), size = 2, col = "gray") + 
   geom_hline(yintercept=0, colour="red", lwd = 1.1)+
-  labs(title = "Gráfico Resíduos x Ordem de Coleta", x = "Ordem de Coleta",
-       y = "Resíduos") +
+  labs(title = "Grafico Residuos x Ordem de Coleta", x = "Ordem de Coleta",
+       y = "Residuos") +
   theme_minimal()+
   theme( plot.title = element_text(hjust = 0.5), axis.title = element_text(size = 12), 
          axis.text = element_text(size = 10), title =  element_text(size = 16) ) 
 
 ind
 
-### suposição de normalidade
+### suposi??o de normalidade
+library(gridExtra)
 R_qqn<-ggplot(dados_res, aes(sample = res))+
-  theme_minimal()+
   geom_qq_line(col = "red")+
   stat_qq()+
-  labs(title = 'Gráfico Normal Probabilístico dos Resíduos',
-       y = 'Quantis da amostra',
-       x = 'Quantis teóricos')+
+  theme_minimal()+
+  labs(y = 'Quantis da amostra',
+       x = 'Quantis teÃ³ricos')+
   theme(plot.title=element_text(hjust = 0.5))
 
-#Toda as transformações de uma vez 
+residuals_histogram <- ggplot(dados_res, aes(x = res))+
+  geom_histogram(color ='black')+
+  theme_minimal()+
+  labs(x = 'ResÃ­duos', y = "FrequÃªncia")
+grid.arrange(R_qqn, residuals_histogram , ncol=2)
+
+# transformacoes
 library(bestNormalize)
 (BNobject <- bestNormalize(as.numeric(DG$V9)))
 
 library(car)
 library(carData)
-transf <- powerTransform(dados[4], family = "bcnPower") # Transformação
+transf <- powerTransform(dados[4], family = "bcnPower") # Transformacao
 lambda <- c(transf$lambda)
 lambda
 
@@ -383,24 +387,23 @@ sx <- sd(res)
 ks.test(res, "pnorm", xb, sx,alternative='two.sided')
 ad.test(res)
 
-cvm.test(res)  ##Cramér-von Mises
+cvm.test(res)  ##Cramer-von Mises
 sf.test(res)  ## Shapiro-Francia
 
 ### teste de homicedasticidade
-
 library(zoo)
 library(lmtest)
-Res=data.frame(ajuste$residuals,rstandard(ajuste),rstudent(ajuste))
-colnames(Res)=c("Resíduos","Resíduos Padronizados","Resíduos Studentizados")
-bptest(ajuste)
-gqtest(ajuste)
+Res=data.frame(modelo$residuals,rstandard(modelo),rstudent(modelo))
+colnames(Res)=c("Res?duos","Res?duos Padronizados","Res?duos Studentizados")
+bptest(modelo)
+gqtest(modelo)
 
 R_S<-ggplot(mapping =aes(modelo$fitted.values,rstudent(modelo)))+
   geom_point()+
   geom_hline(yintercept=0, colour="red")+
   theme_classic()+
-  labs(title = "Resíduos Studentizados versus Valores Preditos",
-       y = 'Resíduos Studentizados',
+  labs(title = "Res?duos Studentizados versus Valores Preditos",
+       y = 'Res?duos Studentizados',
        x = 'Valores Preditos')+
   theme(plot.title=element_text(hjust = 0.5))
 
@@ -409,3 +412,6 @@ R_S<-ggplot(mapping =aes(modelo$fitted.values,rstudent(modelo)))+
 library(MVN)
 mvn(dados, mvnTest = "mardia", multivariatePlot = "qq",
     univariateTest = "AD")
+
+
+
