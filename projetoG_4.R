@@ -43,17 +43,17 @@ anova(modelo132)
 qf(0.95,1,727)
 
 ## correlacao das variaveis 
-DG_new <- NULL
-DG_new$X1 = as.numeric(DG$V1)
-DG_new$X2 = as.numeric(DG$V2)
-DG_new$X3 = as.numeric(DG$V3)
-DG_new$X4 = as.numeric(DG$V4)
-DG_new$X5 = as.numeric(DG$V5)
-DG_new$X6 = as.numeric(DG$V6)
-DG_new$X7 = as.numeric(DG$V7)
-DG_new$X8 = as.numeric(DG$V8)
-DG_new$Y = as.numeric(DG$V9)
-
+DG_new <- data.frame(
+  X1 = as.numeric(DG$V1),
+  X2 = as.numeric(DG$V2),
+  X3 = as.numeric(DG$V3),
+  X4 = as.numeric(DG$V4),
+  X5 = as.numeric(DG$V5),
+  X6 = as.numeric(DG$V6),
+  X7 = as.numeric(DG$V7),
+  X8 = as.numeric(DG$V8),
+  Y = as.numeric(DG$V9)
+)
 library(GGally)
 ggpairs(DG_new[-c(1,2,3)])
 pairs(DG_new[-c(1,2,3)], pch = 19)
@@ -413,5 +413,119 @@ library(MVN)
 mvn(dados, mvnTest = "mardia", multivariatePlot = "qq",
     univariateTest = "AD")
 
+'''
+selecao de variaveis para o modelo.
+sera utilizado o metodo forward em que uma variavel sera incluida no modelo
+sequencialmente ate que tenhamos um modelo aceitavel utilizando como criterio
+o valor p
+'''
+
+library(olsrr) ## metodo de seleção de variaveis
+
+dados_c <- data.frame(
+                      X4 = DG_new$X4, 
+                      X5 = DG_new$X5, 
+                      X6 = DG_new$X6, 
+                      X7 = DG_new$X7, 
+                      X8 = DG_new$X8, 
+                      Y = DG_new$Y
+                      )
+
+modelo <- lm(Y ~ X4+X5+X6+X7+X8, data = dados_c) #modelo completo
+
+modelo4 <- lm(Y ~ X4, data = dados_c)
+summary(modelo4)
+
+modelo5 <- lm(Y ~ X5, data = dados_c)
+summary(modelo5)
+
+modelo6 <- lm(Y ~ X6, data = dados_c)
+summary(modelo6)
+
+modelo7 <- lm(Y ~ X7, data = dados_c)
+summary(modelo7)
+
+modelo8 <- lm(Y ~ X8, data = dados_c)
+summary(modelo8)
+
+#################### seleção de variáveis ###########################
+k <- ols_step_all_possible(modelo) #Todas as regressões possíveis
+plot(k) 
+p = k$n + 1
+model = k$predictors
+R2 = k$rsquare
+cp = k$cp # valores de cp de cada modelo 
+aic = k$aic  # valores de aic de cada modelo 
+
+k$predictors[-c(10,11,12,13,14,15,16,19,21,22,27,29,30)]
+
+Tabela <- data.frame(p, model, R2, cp, aic)
+
+library(ggplot2)
+library(tidyverse)
+library(gghighlight)
+library(ggrepel)
+
+R2xmodelo <- ggplot(Tabela[-c(10,11,12,13,14,15,16,19,21,22,23,24,25,27,29,30),]) +
+  geom_point(aes(x = p, y = R2), size = 2, col = "grey50", alpha = 1.5) + 
+  labs(title = "p x R2", x = "p",
+       y = "R2") +
+  theme_minimal()+
+  theme( plot.title = element_text(hjust = 0.5), axis.title = element_text(size = 12), 
+         axis.text = element_text(size = 10), title =  element_text(size = 16) ) 
+
+cpxmodelo <- ggplot(Tabela[-c(10,11,12,13,14,15,16,19,21,22,23,24,25,27,29,30),]) +
+  geom_point(aes(x = p, y = cp), size = 2, col = "grey50", alpha = 1.5) + 
+  labs(title = "p x cp", x = "p",
+       y = "cp") +
+  geom_abline(slope = 1, intercept = p, colour="red", lwd = 1.1)+
+  theme_minimal()+
+  theme( plot.title = element_text(hjust = 0.5), axis.title = element_text(size = 12), 
+         axis.text = element_text(size = 10), title =  element_text(size = 16) ) 
+
+aicxmodelo <- ggplot(Tabela[-c(10,11,12,13,14,15,16,19,21,22,23,24,25,27,29,30),]) +
+  geom_point(aes(x = p, y = aic), size = 2, col = "grey50", alpha = 1.5) + 
+  labs(title = "p x aic", x = "p",
+       y = "aic") +
+  theme_minimal()+
+  theme( plot.title = element_text(hjust = 0.5), axis.title = element_text(size = 12), 
+         axis.text = element_text(size = 10), title =  element_text(size = 16) ) 
 
 
+k1 <- ols_step_best_subset(modelo) #Melhor Regressão de Subconjunto
+plot(k1)
+
+k2 <- ols_step_forward_p(modelo) #Regressão Stepwise Forward
+plot(k2)
+
+k22 <- ols_step_forward_p(modelo, details = TRUE) # Forward detalhado
+plot(k22)
+
+k3 <- ols_step_backward_p(modelo) #Regressão regressiva gradual
+plot(k3)
+
+k33 <- ols_step_backward_p(modelo, details = TRUE) # Backward detalhado
+plot(k33)
+
+k4 <- ols_step_both_p(modelo) #Regressão Stepwise
+plot(k4)
+
+k44 <- ols_step_both_p(modelo, details = TRUE) # Stepwise detalhado
+
+
+library(corrplot)
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+ggcorr(dados_c,
+       name = expression(rho),
+       label = TRUE,
+       label_round = 3,
+       digits = 3,
+       geom = "tile",
+       max_size = 10,
+       min_size = 2,
+       size = 3,
+       hjust = 0.75,
+       nbreaks = 6,
+       angle = -45,
+       palette = "PuOr" # colorblind safe, photocopy-able
+       )
